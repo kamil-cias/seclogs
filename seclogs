@@ -1,0 +1,120 @@
+#!/bin/bash
+#
+# seclogs application v1.0.1
+# Author: Kamil Ciaś
+# Email: kamil.cias@goto.systems
+# License: GPL-3.0
+#
+# This script is distributed under the terms of the GNU General Public License, version 3.0 or later.
+# Details of the license can be found at: https://www.gnu.org/licenses/gpl-3.0.html
+# 
+# Description:
+# The seclogs application is used to quickly and safely create encrypted archives in a Linux environment.
+# A script with the -e or --encrypt parameter takes a directory as an argument, packs and compresses it,
+# and then encrypts it. The result of the application is an encrypted and compressed archive.
+# Decryption with the -d or --decrypt parameter involves providing the encrypted file as an argument.
+# The application asks for a password, then decrypts, decompresses and unpacks the given archive into a directory.
+#
+#
+set -eu
+
+# Check if tar and gpg are installed
+if ! command -v tar &> /dev/null
+then
+    echo "tar could not be found, please install"
+    exit
+fi
+
+if ! command -v gpg &> /dev/null
+then
+    echo "gpg could not be found, please install"
+    exit
+fi
+
+# Function for encryption
+function encrypt() {
+    if [ "$#" -ne 2 ]; then
+        echo "Provide correct arguments for -e or --encrypt option: [option] [directory_path]"
+        exit 1
+    fi
+
+    local encrypt_flag="$1"
+    local directory="${2%/}"  # Remove trailing slash if it exists
+    generated_password=$(generate_password)
+    echo "Generated password: $generated_password"
+
+    case "$encrypt_flag" in
+        -e|--encrypt)
+            # Check if the provided path is a directory
+            if [ ! -d "$directory" ]; then
+                echo "The provided path does not point to a directory."
+                exit 1
+            fi
+
+            # Create tar.bz2 archive
+            tar -cjf "$directory.tar.bz2" "$directory"
+
+            # Compress the tar.bz2 archive
+            gpg --symmetric --batch --yes --passphrase "$generated_password" "$directory.tar.bz2"
+            echo -e "Encrypted data has been saved in the file\n $directory.tar.bz2.gpg"
+
+            # Remove the tar.bz2 archive
+            rm -f "$directory.tar.bz2"
+
+            # Add code here for handling the sending/storing of encrypted data
+            ;;
+        *)
+            echo "Unknown option for -e|--encrypt: $encrypt_flag. Use -h or --help for assistance." >&2
+            exit 1
+            ;;
+    esac
+}
+
+# Function for version
+function version() {
+    app_version="1.0.2"
+    echo "seclogs app version $app_version"
+}
+
+# Function for help
+function help_function() {
+    echo "Called the help function"
+    echo "Usage: $0 [option]"
+    echo "Options:"
+    echo "  -e, --encrypt [directory_path]    Encrypt data from a directory"
+    echo "  -v, --version                     Display version information"
+    echo "  -h, --help                        Display help"
+    exit 0
+}
+
+# Function for generating a password
+function generate_password() {
+    # Generate a password based on /dev/urandom
+    password_length=32
+    generated_password=$(tr -dc 'A-Za-z0-9!@#$%^&*()_+=-' </dev/urandom | head -c "$password_length")
+    echo "$generated_password"
+}
+
+# Check if at least one argument is provided
+if [ $# -eq 0 ]; then
+    echo -e "Provide correct arguments...\nUse -h or --help for assistance.\n"
+    exit 1
+fi
+
+# Main script logic
+case "$1" in
+    -e|--encrypt)
+        encrypt "$@"
+        ;;
+    -v|--version)
+        version
+        ;;
+    -h|--help)
+        help_function
+        ;;
+    *)
+        echo "Unknown option. Use -h or --help for assistance." >&2
+        exit 1
+        ;;
+esac
+
