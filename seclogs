@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# seclogs application v1.0.1
+# The application version number is located in the app_version variable.
 # Author: Kamil Ciaś
 # Email: kamil.cias@goto.systems
 # License: GPL-3.0
