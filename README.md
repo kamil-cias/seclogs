@@ -43,6 +43,7 @@ seclogs [-v|--version]
 Usage: seclogs [-e|--encrypt] [-h|--help] [directory_path]
 Options:
 -e, --encrypt    Encrypt files in the specified directory
+-d, --decrypt [file_path] [output_directory]    Decrypt data from an encrypted file
 -h, --help       Display this help message
 -v, --version    Display the app version
 
