@@ -1,5 +1,5 @@
 # Application for quickly and securely building encrypted archives.
-*Author: Kamil Ciaś, <kamil.cias@goto.systems>*
+*Author: Kamil Ciaś, <kamil.cias@nexstep.systems>*
 
 *GPL-3.0 license*
 *This script is distributed under the terms of the GNU General Public License, version 3.0 or later.
