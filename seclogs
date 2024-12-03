@@ -2,7 +2,7 @@
 #
 # The application version number is located in the app_version variable.
 # Author: Kamil Ciaś
-# Email: kamil.cias@goto.systems
+# Email: kamil.cias@nexstep.systems
 # License: GPL-3.0
 #
 # This script is distributed under the terms of the GNU General Public License, version 3.0 or later.
@@ -70,9 +70,62 @@ function encrypt() {
     esac
 }
 
+# Function for decryption
+function decrypt() {
+    if [ "$#" -ne 3 ]; then
+        echo "Provide correct arguments for -d or --decrypt option: [option] [file_path] [output_directory]"
+        exit 1
+    fi
+
+    local decrypt_flag="$1"
+    local file="$2"
+    local output_directory="${3%/}"  # Remove trailing slash if it exists
+
+    case "$decrypt_flag" in
+        -d|--decrypt)
+            # Check if the provided path is a file
+            if [ ! -f "$file" ]; then
+                echo "The provided path does not point to a file."
+                exit 1
+            fi
+
+            # Check if the output directory exists, if not, create it
+            if [ ! -d "$output_directory" ]; then
+                mkdir -p "$output_directory"
+            fi
+
+            # Ask for the decryption password
+            read -sp "Enter the decryption password: " password
+            echo
+
+            # Decrypt the archive
+            if ! gpg --batch --yes --passphrase "$password" --output "${file%.gpg}" --decrypt "$file"; then
+                echo "Decryption failed. Ensure the password is correct and the file is not corrupted."
+                exit 1
+            fi
+
+            # Decompress the tar.bz2 archive into the output directory
+            if ! tar -xjf "${file%.gpg}" -C "$output_directory"; then
+                echo "Decompression failed. Ensure the archive file is valid."
+                exit 1
+            fi
+
+            # Remove the decrypted tar.bz2 file
+            rm -f "${file%.gpg}"
+            echo -e "Decryption and decompression completed. Files extracted to $output_directory."
+
+            # Add code here for handling the extracted data
+            ;;
+        *)
+            echo "Unknown option for -d|--decrypt: $decrypt_flag. Use -h or --help for assistance." >&2
+            exit 1
+            ;;
+    esac
+}
+
 # Function for version
 function version() {
-    app_version="1.0.2"
+    app_version="1.0.3"
     echo "seclogs app version $app_version"
 }
 
@@ -82,6 +135,7 @@ function help_function() {
     echo "Usage: $0 [option]"
     echo "Options:"
     echo "  -e, --encrypt [directory_path]    Encrypt data from a directory"
+    echo "  -d, --decrypt [file_path] [output_directory]    Decrypt data from an encrypted file"
     echo "  -v, --version                     Display version information"
     echo "  -h, --help                        Display help"
     exit 0
@@ -105,6 +159,9 @@ fi
 case "$1" in
     -e|--encrypt)
         encrypt "$@"
+        ;;
+    -d|--decrypt)
+        decrypt "$@"
         ;;
     -v|--version)
         version
