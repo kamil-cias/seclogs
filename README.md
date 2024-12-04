@@ -23,7 +23,7 @@ or
 
 ### For file decryption *future functionality*
 ```shell
-seclogs [-d|--decrypt] encrypted-file
+seclogs [-d|--decrypt] encrypted-file output-directory
 ```
 or
 
